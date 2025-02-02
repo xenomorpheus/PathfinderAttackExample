@@ -79,6 +79,17 @@ std::ostream &operator<<(std::ostream &os, const PowerAttackResult &powerAttack)
     return os;
 }
 
+int attackWithWeapon(int attackBonus, Weapon weapon, int armorClass)
+{
+    int damage = 0;
+    DiceRoll attackRoll = {1, 20, 0};
+
+    int roll = diceRoll(attackRoll);
+    int attack = roll + attackBonus;
+
+    return damage;
+}
+
 int main()
 {
     // Character stats
@@ -87,8 +98,6 @@ int main()
     int weaponFocus = 1;
 
     std::cout << "BAB: " << bab << std::endl;
-
-    DiceRoll attackRoll = {1, 20, 0};
 
     for (bool powerAttacking : {false, true})
     {
@@ -99,17 +108,17 @@ int main()
 
         for (bool twoWeapon : {false, true})
         {
-            int attackBonus = bab + statMod(str) + (twoWeapon ? -2 : 0) // Both weapons are light
-                              + powerAttack.attackPenalty;
 
             // Weapon stats
-            Weapon rapierPlus1 = {"+1 Rapier", attackBonus + 1, {1, 6, statMod(str) + powerAttack.damageBonusOneHanded + 1}, 18, 2};
-            Weapon shortsword = {"Shortsword, off hand", attackBonus + weaponFocus, {1, 6, (statMod(str) + powerAttack.damageBonusOneHanded) / 2}, 19, 2};
+            Weapon primary = {"+1 Rapier", statMod(str) + 1, {1, 6, statMod(str) + powerAttack.damageBonusOneHanded + 1}, 18, 2};
+            std::optional<Weapon> secondary;
 
-            std::cout << "Main Hand: " << rapierPlus1 << std::endl;
+            std::cout << "Primary: " << primary << std::endl;
             if (twoWeapon)
             {
-                std::cout << "Off Hand: " << shortsword << std::endl;
+                secondary.emplace(Weapon{"Shortsword, WF, off hand", statMod(str) + weaponFocus, {1, 6, (statMod(str) + powerAttack.damageBonusOneHanded) / 2}, 19, 2});
+                std::cout
+                    << "Secondary:  " << secondary.value() << std::endl;
             }
             std::cout << std::endl;
 
@@ -118,12 +127,22 @@ int main()
                 // TODO 1000 rounds of combat
                 for (int round = 0; round < 1; round++)
                 {
-                    // First rapier attack
+                    int damage = 0;
 
-                    // Second shortsword attack
-                    if (twoWeapon)
+                    for (int effectiveBab = bab; effectiveBab >= 1; effectiveBab -= 5)
                     {
-                        ; // todo off hand
+
+                        int attackBonus = effectiveBab + (twoWeapon ? -2 : 0) // Both weapons are light
+                                          + powerAttack.attackPenalty;
+
+                        std::cout << "Effective BAB: " << effectiveBab << " | Attack Bonus: " << attackBonus << std::endl;
+
+                        // Primary attack
+                        damage += attackWithWeapon(attackBonus, primary, armorClass);
+                        if (secondary.has_value())
+                        {
+                            damage += attackWithWeapon(attackBonus, secondary.value(), armorClass);
+                        }
                     }
                 }
             }
