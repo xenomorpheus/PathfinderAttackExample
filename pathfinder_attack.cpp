@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vector>
+#include <format>
 
 #include "logger.hpp"
 
@@ -130,6 +132,16 @@ namespace
 
         int attackSequenceDamage(const std::vector<Weapon> &weapons, int bab, const PowerAttackResult &powerAttack, int armorClass)
         {
+            if (weapons.empty())
+            {
+                logger.log(LogLevel::ERROR, std::ostringstream() << "No weapons to attack with!");
+                return 0;
+            }
+            if (weapons.size() > 2)
+            {
+                logger.log(LogLevel::ERROR, std::ostringstream() << "Too many weapons to attack with!");
+                return 0;
+            }
             int damageTotal = 0;
             for (int effectiveBab = bab; effectiveBab >= 1; effectiveBab -= 5)
             {
@@ -139,7 +151,6 @@ namespace
 
                 for (const Weapon &weapon : weapons)
                 {
-                    logger.log(LogLevel::TRACE, std::ostringstream() << "Weapon: " << weapon);
                     damageTotal += attackWithWeapon(attackBonus, weapon, armorClass);
                 }
             }
@@ -153,16 +164,6 @@ namespace
 
         double averageDamage(const std::vector<Weapon> &weapons, int bab, const PowerAttackResult &powerAttack, int armorClass, int sequences = 1'000)
         {
-            if (weapons.empty())
-            {
-                logger.log(LogLevel::ERROR, std::ostringstream() << "No weapons to attack with!");
-                return 0.;
-            }
-            if (weapons.size() > 2)
-            {
-                logger.log(LogLevel::ERROR, std::ostringstream() << "Too many weapons to attack with!");
-                return 0.;
-            }
             long damage = 0;
             for (int sequence = 0; sequence < sequences; sequence++)
             {
@@ -185,8 +186,10 @@ void showAverageDamagePerAc()
     logger.setLogLevel(LogLevel::INFO);
     PathfinderAttack pathfinderAttack(logger);
 
+    logger.log(LogLevel::INFO, std::ostringstream() << std::format("AC, {:>5}, {:>5}, {:>5}, {:>5}", "None", "TWF", "PA", "TWFPA"));
     for (int armorClass = 10; armorClass <= 30; armorClass++)
     {
+        std::vector<double> damages;
         for (bool powerAttacking : {false, true})
         {
             PowerAttackResult powerAttack = calculatePowerAttack(powerAttacking, bab);
@@ -196,15 +199,22 @@ void showAverageDamagePerAc()
 
                 std::vector<Weapon> weapons;
                 weapons.emplace_back("+1 Rapier", statMod(str) + 1, DiceRoll{1, 6, statMod(str) + powerAttack.damageBonusOneHanded + 1}, 18, 2);
+                logger.log(LogLevel::DEBUG, std::ostringstream() << "Weapon: " << weapons[0]);
                 if (twoWeapon)
                 {
                     weapons.emplace_back("Shortsword, WF, off hand", statMod(str) + weaponFocus, DiceRoll{1, 6, (statMod(str) + powerAttack.damageBonusOneHanded) / 2}, 19, 2);
+                    logger.log(LogLevel::DEBUG, std::ostringstream() << "Weapon: " << weapons[1]);
                 }
-
-                double damage = pathfinderAttack.averageDamage(weapons, bab, powerAttack, armorClass);
-                logger.log(LogLevel::INFO, std::ostringstream() << "Average damage against AC " << armorClass << ": " << damage << ", PA: " << std::boolalpha << powerAttacking << ", TWF: " << twoWeapon);
+                damages.push_back(pathfinderAttack.averageDamage(weapons, bab, powerAttack, armorClass));
             }
         }
+        std::ostringstream oss;
+        oss << armorClass;
+        for (const auto &damage : damages)
+        {
+            oss << std::format(", {:5.2f}", damage);
+        }
+        logger.log(LogLevel::INFO, std::ostringstream() << oss.str());
     }
 }
 

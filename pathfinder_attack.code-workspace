@@ -9,6 +9,7 @@
 			"*.run": "perl",
 			"*.py": "python",
 			"*.cpp": "cpp",
+			"*.tt": "html",
 			"__locale": "cpp",
 			"string": "cpp",
 			"ios": "cpp",
@@ -66,7 +67,8 @@
 			"unordered_map": "cpp",
 			"variant": "cpp",
 			"vector": "cpp",
-			"algorithm": "cpp"
+			"algorithm": "cpp",
+			"fstream": "cpp"
 		}
 	}
 }
