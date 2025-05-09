@@ -26,7 +26,7 @@ void Logger::log(LogLevel level, std::ostringstream &&stream)
 {
     if (!logFile)
     {
-        std::cerr << "Logging failed: Log file is not open." << std::endl;
+        std::cerr << "Logging failed: Log file is not open.\n";
         return;
     }
 
@@ -38,7 +38,7 @@ void Logger::log(LogLevel level, std::ostringstream &&stream)
     }
 
     logFile << "[" << getTimeStamp() << "] [" << logLevelToString(level) << "] "
-            << stream.str() << std::endl;
+            << stream.str() << "\n";
 }
 
 std::string Logger::getTimeStamp()
