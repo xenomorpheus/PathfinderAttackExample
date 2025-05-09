@@ -5,7 +5,7 @@ Logger::Logger(const std::string &filename)
     logFile.open(filename, std::ios::app);
     if (!logFile)
     {
-        std::cerr << "Failed to open log file!" << std::endl;
+        std::cerr << "Failed to open log file!\n";
     }
 }
 
